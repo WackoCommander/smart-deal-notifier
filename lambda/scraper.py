@@ -19,6 +19,8 @@ def scrape_deals():
         deal_id = link.split("/")[-1]
         description = deal.find("p", class_="description").text  # Assuming description exists
 
+        # TO-DO: A UUID may need to generated using the deal title string.  
+
         deals.append({
             "id": deal_id,
             "title": title,

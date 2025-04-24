@@ -1,32 +1,50 @@
 import requests
 from bs4 import BeautifulSoup
+from abc import ABC, abstractmethod
+
+class BaseScraper(ABC):
+    @abstractmethod
+    def scrape_page(self, url):
+        """
+        Should return a list of dicts with;
+        - id: uuid of title
+        - title: str
+        - price: str 
+        - url: str
+        Example:
+        [
+            { 
+                "id": "123",
+                "title": "Product Title",
+                "price": "19.99",
+                "url": "https://..."
+        """
+
+        pass
+    @abstractmethod
+    def get_deals(self):
+        """
+        This function should manage the function of scraping multiple pages.
+        Should return one array of deals
+        """
+        pass
+
+
+
+class OzBargain(BaseScraper):
+    def scrape_page(self, url):
+        return results
+
+    def get_deals(self, url):
+        return deals
+
 
 def scrape_deals():
-    """
-    Scrapes deals from a webpage and returns a list of deals.
-    """
-    url = "https://example-deals.com/latest"  # Replace with actual URL
-    html = requests.get(url).text
-    soup = BeautifulSoup(html, 'html.parser')
+    # Instantiate scrapers
+    scrapers = [OzBargain()]
 
-    # Example scraping logic for deals
-    deal_elements = soup.find_all("div", class_="deal")
-    deals = []
-    for deal in deal_elements:
-        title = deal.find("h2").text
-        price = float(deal.find("span", class_="price").text.replace("$", ""))
-        link = deal.find("a")["href"]
-        deal_id = link.split("/")[-1]
-        description = deal.find("p", class_="description").text  # Assuming description exists
+    for scraper in scrapers:
+        deals = scraper.get_deals()
 
-        # TO-DO: A UUID may need to generated using the deal title string.  
-
-        deals.append({
-            "id": deal_id,
-            "title": title,
-            "price": price,
-            "url": link,
-            "description": description
-        })
     return deals
 

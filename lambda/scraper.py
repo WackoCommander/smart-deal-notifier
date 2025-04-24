@@ -44,6 +44,21 @@ class OzBargain(BaseScraper):
         return website_deals
 
 
+# TO-DO:
+# NOTE: Site may no longer be available. 
+class Booko(BaseScraper):
+    def scrape_page(self, url):
+        pass
+    def get_deals(self, url):
+        pass
+
+# TO-DO: 
+class FlightFinderAu(BaseScraper):
+    def scrape_page(self, url):
+        pass
+    def get_deals(self, url):
+        pass
+
 def scrape_deals():
     # Instantiate scrapers
     # Extend the scraper list with additional scrappers

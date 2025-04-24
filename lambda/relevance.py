@@ -6,6 +6,7 @@ comprehend = boto3.client('comprehend')
 def is_relevant(deal):
     """
     Use AWS Comprehend to analyze the deal description and check relevance.
+    May look into using AWS Sagemaker, or AWS Personalize for more ML focused solution.
     Returns True if relevant, False otherwise.
     """
     response = comprehend.detect_entities(

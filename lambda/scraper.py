@@ -1,26 +1,18 @@
 import requests
 from bs4 import BeautifulSoup
 from abc import ABC, abstractmethod
+import uuid
+import hashlib
 
 class BaseScraper(ABC):
     @abstractmethod
     def scrape_page(self, url):
         """
-        Should return a list of dicts with;
-        - id: uuid of title
-        - title: str
-        - price: str 
-        - url: str
-        Example:
-        [
-            { 
-                "id": "123",
-                "title": "Product Title",
-                "price": "19.99",
-                "url": "https://..."
+        Should return a list of deals for that particular page;
+        - deal - article description e.g. "iPad costs 14.99 at Officeworks"
         """
-
         pass
+
     @abstractmethod
     def get_deals(self):
         """

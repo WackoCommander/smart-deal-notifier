@@ -23,20 +23,46 @@ class BaseScraper(ABC):
 
 
 
+
 class OzBargain(BaseScraper):
     def scrape_page(self, url):
-        return results
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        titles = [tag['data-title'] for tag in soup.find_all(attrs={'data-title': True})]
 
-    def get_deals(self, url):
-        return deals
+        return titles
+
+    def get_deals(self):
+        website_deals = []
+        base_url = "https://www.ozbargain.com.au/deals?page="
+
+        for page in range(0,5):
+            url = base_url + str(page)
+            page_deals = self.scrape_page(url)
+            website_deals.extend(page_deals)
+
+        return website_deals
 
 
 def scrape_deals():
     # Instantiate scrapers
     scrapers = [OzBargain()]
+    deals_titles = []
 
     for scraper in scrapers:
-        deals = scraper.get_deals()
+        website_deals = scraper.get_deals()
+        deals_titles.extend(website_deals)
 
-    return deals
+    
+    """
+    deals_with_id = []
+    for title in deals_titles:
+        hex_string = hashlib.md5(str(title).encode("UTF-8"))
+        deal_id = uuid.UUID(hex=hex_string)
+        deal_with_id = {
+                "id": deal_id,
+                "title": title
+                }
+    """
+    return deals_titles
 

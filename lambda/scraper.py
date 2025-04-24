@@ -46,6 +46,7 @@ class OzBargain(BaseScraper):
 
 def scrape_deals():
     # Instantiate scrapers
+    # Extend the scraper list with additional scrappers
     scrapers = [OzBargain()]
     deals_titles = []
 

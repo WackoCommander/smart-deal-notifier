@@ -14,7 +14,7 @@ A serverless application to scrape deals from a website, analyze them for releva
 - `lambda/`
   - `handler.py`: Main Lambda entry point.
   - `scraper.py`: Web scraping logic.
-  - `relevance.py`: Analyzes deal descriptions using AWS Comprehend.
+  - `relevance.py`: Analyzes deal descriptions using AWS Comprehend, and extracts key words.
   - `notifier.py`: Sends notifications via SNS.
   - `db_helper.py`: Interacts with DynamoDB to track deals.
   - `requirements.txt`: Python dependencies.

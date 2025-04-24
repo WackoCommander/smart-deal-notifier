@@ -13,7 +13,6 @@ def lambda_handler(event, context):
 
     # Step 2: Process each deal
     for deal in deals:
-        if is_relevant(deal) and not is_seen(deal["id"], TABLE_NAME):
+        if is_relevant(deal) and not is_seen(deal, TABLE_NAME):
             send_alert(deal, TOPIC_ARN)
-            mark_seen(deal["id"], TABLE_NAME)
-
+            mark_seen(deal, TABLE_NAME)

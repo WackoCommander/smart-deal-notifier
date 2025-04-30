@@ -1,84 +1,91 @@
 import requests
 from bs4 import BeautifulSoup
 from abc import ABC, abstractmethod
-import uuid
-import hashlib
 
 class BaseScraper(ABC):
     @abstractmethod
     def scrape_page(self, url):
         """
         Should return a list of deals for that particular page;
-        - deal - article description e.g. "iPad costs 14.99 at Officeworks"
+        each deal is a dict containing at least:
+            - title (str)
+            - votes_plus (int)
+            - votes_minus (int)
         """
         pass
 
     @abstractmethod
     def get_deals(self):
         """
-        This function should manage the function of scraping multiple pages.
-        Should return one array of deals
+        This function should manage scraping multiple pages.
+        Should return a list of deal dicts.
         """
         pass
-
-
-
 
 class OzBargain(BaseScraper):
     def scrape_page(self, url):
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
-        titles = [tag['data-title'] for tag in soup.find_all(attrs={'data-title': True})]
+        deals = []
 
-        return titles
+        for n_right in soup.find_all('div', class_='n-right'):
+            # Get title
+            h2 = n_right.find('h2', class_='title')
+            if not h2 or not h2.has_attr('data-title'):
+                continue
+            title = h2['data-title']
+
+            # Find votes
+            parent = n_right.parent
+            n_left = parent.find('div', class_='n-left') if parent else None
+
+            votes_plus = 0
+            votes_minus = 0
+            if n_left:
+                voteup_span = n_left.find('span', class_='nvb voteup')
+                votedown_span = n_left.find('span', class_='nvb votedown')
+                if voteup_span and voteup_span.span:
+                    try:
+                        votes_plus = int(voteup_span.span.text.strip())
+                    except Exception:
+                        votes_plus = 0
+                if votedown_span and votedown_span.span:
+                    try:
+                        votes_minus = int(votedown_span.span.text.strip())
+                    except Exception:
+                        votes_minus = 0
+
+            deals.append({
+                "title": title,
+                "votes_plus": votes_plus,
+                "votes_minus": votes_minus
+            })
+
+        return deals
 
     def get_deals(self):
         website_deals = []
         base_url = "https://www.ozbargain.com.au/deals?page="
 
-        for page in range(0,5):
+        for page in range(0, 5):
             url = base_url + str(page)
             page_deals = self.scrape_page(url)
             website_deals.extend(page_deals)
 
         return website_deals
 
-
-# TO-DO:
-# NOTE: Site may no longer be available. 
-class Booko(BaseScraper):
-    def scrape_page(self, url):
-        pass
-    def get_deals(self, url):
-        pass
-
-# TO-DO: 
 class FlightFinderAu(BaseScraper):
     def scrape_page(self, url):
         pass
-    def get_deals(self, url):
+    def get_deals(self):
         pass
 
 def scrape_deals():
-    # Instantiate scrapers
-    # Extend the scraper list with additional scrappers
     scrapers = [OzBargain()]
-    deals_titles = []
+    deals_results = []
 
     for scraper in scrapers:
         website_deals = scraper.get_deals()
-        deals_titles.extend(website_deals)
+        deals_results.extend(website_deals)
 
-    
-    """
-    deals_with_id = []
-    for title in deals_titles:
-        hex_string = hashlib.md5(str(title).encode("UTF-8"))
-        deal_id = uuid.UUID(hex=hex_string)
-        deal_with_id = {
-                "id": deal_id,
-                "title": title
-                }
-    """
-    return deals_titles
-
+    return deals_results

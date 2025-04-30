@@ -5,7 +5,7 @@ A serverless application to scrape deals from a website, analyze them for releva
 ## Components
 
 - **AWS Lambda**: Processes deals and triggers relevant actions.
-- **Amazon Comprehend**: Analyzes deal descriptions to extract keywords, and present the deal in user friendly terms.
+- **Amazon Bedrock**: Analyzes deal descriptions to extract keywords, and present the deal in user friendly terms.
 - **Amazon SNS**: Sends alerts when relevant deals are found.
 - **Amazon DynamoDB**: Tracks which deals have been seen to avoid duplicate notifications.
 

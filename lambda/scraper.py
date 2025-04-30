@@ -5,21 +5,10 @@ from abc import ABC, abstractmethod
 class BaseScraper(ABC):
     @abstractmethod
     def scrape_page(self, url):
-        """
-        Should return a list of deals for that particular page;
-        each deal is a dict containing at least:
-            - title (str)
-            - votes_plus (int)
-            - votes_minus (int)
-        """
         pass
 
     @abstractmethod
     def get_deals(self):
-        """
-        This function should manage scraping multiple pages.
-        Should return a list of deal dicts.
-        """
         pass
 
 class OzBargain(BaseScraper):
@@ -34,6 +23,13 @@ class OzBargain(BaseScraper):
             if not h2 or not h2.has_attr('data-title'):
                 continue
             title = h2['data-title']
+
+            # Extract link
+            relative_link = None
+            link_tag = h2.find('a', href=True)
+            if link_tag:
+                relative_link = link_tag['href']
+            deal_link = f'https://www.ozbargain.com.au{relative_link}' if relative_link else None
 
             # Find votes
             parent = n_right.parent
@@ -57,6 +53,7 @@ class OzBargain(BaseScraper):
 
             deals.append({
                 "title": title,
+                "link": deal_link,
                 "votes_plus": votes_plus,
                 "votes_minus": votes_minus
             })

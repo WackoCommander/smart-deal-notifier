@@ -20,53 +20,83 @@ body {
 header {
   text-align: center;
   margin-bottom: 40px;
-  padding: 20px;
-  background: linear-gradient(to right, #ff7e5f, #feb47b);
+  padding: 30px;
+  background: linear-gradient(135deg, #ff7e5f, #feb47b);
   color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
   margin-bottom: 10px;
-  font-size: 2.5rem;
+  font-size: 3rem;
+  letter-spacing: 1px;
 }
 
 .subscription-section {
   background-color: white;
-  padding: 25px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
 }
 
 .form-group {
   display: flex;
   gap: 10px;
-  margin-top: 15px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .form-group {
+    flex-wrap: nowrap;
+  }
 }
 
 input[type="email"] {
-  flex: 1;
-  padding: 12px;
+  flex: 2;
+  padding: 14px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
+  min-width: 250px;
+}
+
+.category-select {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: white;
+  min-width: 150px;
 }
 
 button {
   background-color: #4CAF50;
   color: white;
   border: none;
-  padding: 12px 20px;
+  padding: 14px 25px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
-  transition: background-color 0.3s;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 button:hover {
   background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.subscribe-btn {
+  background-color: #2196F3;
+}
+
+.subscribe-btn:hover {
+  background-color: #0b7dda;
 }
 
 .unsubscribe-btn {
@@ -82,82 +112,218 @@ button:hover {
   align-items: center;
   justify-content: space-between;
   background-color: #e8f5e9;
-  padding: 15px;
-  border-radius: 4px;
+  padding: 20px;
+  border-radius: 6px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .deals-section {
   margin-top: 40px;
 }
 
-.deals-section h2 {
-  margin-bottom: 20px;
-  text-align: center;
-  color: #333;
+.deals-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: white;
+}
+
+.refresh-btn {
+  background-color: #607d8b;
+  padding: 10px 15px;
+}
+
+.refresh-btn:hover {
+  background-color: #455a64;
 }
 
 .deals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  gap: 25px;
 }
 
 .deal-card {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .deal-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+}
+
+.deal-image {
+  height: 200px;
+  overflow: hidden;
+}
+
+.deal-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.deal-card:hover .deal-image img {
+  transform: scale(1.05);
+}
+
+.deal-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .deal-card h3 {
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.2rem;
 }
 
 .price {
   color: #e53935;
   font-size: 1.4rem;
   font-weight: bold;
-  padding: 10px 15px;
+  margin-bottom: 15px;
 }
 
 .description {
-  padding: 0 15px 15px;
+  color: #666;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.deal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.category-tag {
+  background-color: #f1f1f1;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
   color: #666;
 }
 
 .view-deal {
-  display: block;
-  text-align: center;
+  display: inline-block;
   background-color: #2196F3;
   color: white;
   text-decoration: none;
-  padding: 12px;
-  transition: background-color 0.3s;
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .view-deal:hover {
   background-color: #0b7dda;
+  transform: translateY(-2px);
 }
 
-.error {
-  color: #f44336;
+.no-deals {
   text-align: center;
-  margin-top: 20px;
+  padding: 40px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  color: #666;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.loading-spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container {
+  background-color: #ffebee;
+  border-left: 4px solid #f44336;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 4px;
+  color: #b71c1c;
+}
+
+footer {
+  margin-top: 60px;
+  text-align: center;
+  padding: 20px;
+  color: #777;
+  border-top: 1px solid #eee;
 }
 
 @media (max-width: 768px) {
-  .deals-grid {
-    grid-template-columns: 1fr;
+  header {
+    padding: 20px;
   }
   
-  .form-group {
+  header h1 {
+    font-size: 2rem;
+  }
+  
+  .deals-header {
     flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filter-controls {
+    width: 100%;
+  }
+  
+  select {
+    flex-grow: 1;
+  }
+  
+  .subscription-section {
+    padding: 20px;
+  }
+  
+  .subscribed {
+    flex-direction: column;
+    text-align: center;
   }
 }

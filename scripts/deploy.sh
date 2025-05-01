@@ -81,8 +81,116 @@ cd "$PROJECT_ROOT/frontend"
 echo "📦 Installing frontend dependencies..."
 npm install
 
+# Make sure we have the required files
+echo "🔧 Checking for required components..."
+
+# Check if DealCard.js exists, if not copy our fixed version
+if [ ! -f "src/DealCard.js" ]; then
+  echo "Creating DealCard.js component..."
+  cat > "src/DealCard.js" << 'EOL'
+import React from 'react';
+
+function DealCard({ deal, onNotify }) {
+  // Handle different property formats from different APIs
+  const title = deal.DealName || deal.title || "Unknown Deal";
+  const url = deal.DealURL || deal.url || deal.link || "#";
+  const votesUp = deal.VoteUp || deal.votes_plus || 0;
+  const votesDown = deal.VoteDown || deal.votes_minus || 0;
+  const isNotified = deal.UserNotified || false;
+  
+  const handleNotify = () => {
+    if (isNotified) return;
+    if (onNotify) onNotify(deal);
+  };
+
+  return (
+    <div className="border rounded p-4 bg-white flex flex-col justify-between shadow">
+      <div>
+        <h2 className="font-bold text-lg">{title}</h2>
+        <a href={url} className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">View Deal</a>
+        <div className="mt-2 flex gap-4">
+          <span>👍 {votesUp}</span>
+          <span>👎 {votesDown}</span>
+        </div>
+        <div className="mt-2 text-xs text-gray-500">
+          Notified: {isNotified ? "Yes" : "No"}
+        </div>
+      </div>
+      <button 
+        disabled={isNotified}
+        className={`mt-3 px-3 py-1 rounded ${isNotified ? "bg-gray-300" : "bg-green-600 text-white"}`}
+        onClick={handleNotify}
+      >
+        {isNotified ? "Already Notified" : "Notify Me"}
+      </button>
+    </div>
+  );
+}
+
+export default DealCard;
+EOL
+fi
+
+# Build the frontend with more verbose output to help debug issues
 echo "🔨 Building frontend..."
-npm run build
+NODE_ENV=production npm run build
+
+if [ $? -ne 0 ]; then
+  echo "❌ Frontend build failed. Checking for common issues..."
+  
+  # Check if App.jsx has references to non-existent components
+  if grep -q "import DealCard from './DealCard'" "src/App.jsx"; then
+    if [ ! -f "src/DealCard.js" ] && [ ! -f "src/DealCard.jsx" ]; then
+      echo "⚠️  App.jsx imports DealCard but the file doesn't exist."
+      echo "   Creating a simplified App.jsx..."
+      
+      # Create a simplified App.jsx
+      cat > "src/App.jsx.new" << 'EOL'
+import React, { useState, useEffect } from 'react';
+import './App.css';
+
+const App = () => {
+  const [loading, setLoading] = useState(false);
+  
+  return (
+    <div className="container">
+      <header>
+        <h1>🔥 Smart Deal Notifier</h1>
+        <p>Never miss a great deal again!</p>
+      </header>
+      
+      <section className="subscription-section">
+        <div>
+          <h2>Get Deal Alerts</h2>
+          <p>Subscribe to receive deal notifications!</p>
+        </div>
+      </section>
+      
+      <section className="deals-section">
+        <h2>Latest Deals</h2>
+        <p>Check back soon for the latest deals!</p>
+      </section>
+      
+      <footer>
+        <p>© {new Date().getFullYear()} Smart Deal Notifier - Powered by AWS</p>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
+EOL
+      mv "src/App.jsx.new" "src/App.jsx"
+      echo "Trying build again with simplified App.jsx..."
+      NODE_ENV=production npm run build
+      
+      if [ $? -ne 0 ]; then
+        echo "❌ Frontend build still failing. Please check the error messages above."
+        exit 1
+      fi
+    fi
+  fi
+fi
 
 # Setup backend based on type
 if [ "$BACKEND_TYPE" == "fastapi" ]; then

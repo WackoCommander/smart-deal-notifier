@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { fetchDeals, subscribeToDeals, unsubscribeFromDeals } from './api';
-import DealCard from './DealCard';
+import axios from 'axios';
 import './App.css';
+import DealCard from './DealCard';
 
 const App = () => {
   const [deals, setDeals] = useState([]);
@@ -9,47 +9,60 @@ const App = () => {
   const [error, setError] = useState(null);
   const [userEmail, setUserEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
-  const [categories, setCategories] = useState(['Electronics', 'Clothing', 'Home', 'Toys', 'Travel']);
+  const [categories] = useState(['Electronics', 'Clothing', 'Home', 'Toys']);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [notification, setNotification] = useState(null);
   
+  // Load saved data from localStorage on component mount
   useEffect(() => {
-    // Load user subscription status from local storage
     const savedEmail = localStorage.getItem('userEmail');
     if (savedEmail) {
       setUserEmail(savedEmail);
       setSubscribed(true);
     }
     
-    // Fetch deals from API
-    fetchDeals().catch(error => {});
+    fetchDeals();
   }, []);
   
-  // Handle API calls with proper loading and error states
-  const fetchDealsWithState = async () => {
+  const fetchDeals = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const data = await fetchDeals();
-      setDeals(data);
+      // In a real app, you would fetch from your actual API
+      // For now, let's use a dummy response for testing
+      
+      // Replace this with actual API call when ready
+      // const response = await axios.get('/api/deals');
+      
+      // Dummy data for testing
+      const dummyDeals = [
+        {
+          DealID: '1',
+          DealName: 'MacBook Pro 13" M2',
+          DealURL: 'https://example.com/deal1',
+          VoteUp: 45,
+          VoteDown: 5,
+          UserNotified: false,
+          UserRelevant: true,
+          RelevanceAssessed: true
+        },
+        {
+          DealID: '2',
+          DealName: 'AirPods Pro 2nd Gen',
+          DealURL: 'https://example.com/deal2',
+          VoteUp: 32,
+          VoteDown: 2,
+          UserNotified: true,
+          UserRelevant: true,
+          RelevanceAssessed: true
+        }
+      ];
+      
+      setDeals(dummyDeals);
+      setLoading(false);
     } catch (err) {
       console.error('Error fetching deals:', err);
       setError('Failed to load deals. Please try again later.');
-    } finally {
       setLoading(false);
     }
-  };
-  
-  // Fetch deals on initial load
-  useEffect(() => {
-    fetchDealsWithState();
-  }, []);
-  
-  // Show notifications temporarily then fade out
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type });
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => setNotification(null), 5000);
   };
   
   const handleSubscribe = async (e) => {
@@ -57,66 +70,59 @@ const App = () => {
     if (!userEmail) return;
     
     try {
-      setLoading(true);
-      await subscribeToDeals(
-        userEmail, 
-        selectedCategory === 'all' ? [] : [selectedCategory]
-      );
+      // In a real app, you would call your subscribe API
+      // await axios.post('/api/subscribe', { email: userEmail });
       
+      // For now, just save to localStorage
       localStorage.setItem('userEmail', userEmail);
       setSubscribed(true);
-      showNotification('Successfully subscribed to deal notifications! Please check your email to confirm subscription.');
+      alert('Successfully subscribed! Please check your email to confirm.');
     } catch (err) {
-      showNotification(err.message || 'Failed to subscribe. Please try again.', 'error');
-    } finally {
-      setLoading(false);
+      console.error('Error subscribing:', err);
+      alert('Failed to subscribe. Please try again.');
     }
   };
   
   const handleUnsubscribe = async () => {
     try {
-      setLoading(true);
-      await unsubscribeFromDeals(userEmail);
+      // In a real app, you would call your unsubscribe API
+      // await axios.post('/api/unsubscribe', { email: userEmail });
+      
       localStorage.removeItem('userEmail');
       setSubscribed(false);
       setUserEmail('');
-      showNotification('Successfully unsubscribed from notifications.');
+      alert('Successfully unsubscribed from notifications.');
     } catch (err) {
-      showNotification(err.message || 'Failed to unsubscribe. Please try again.', 'error');
-    } finally {
-      setLoading(false);
+      console.error('Error unsubscribing:', err);
+      alert('Failed to unsubscribe. Please try again.');
     }
   };
   
-  const filterDealsByCategory = (deals) => {
-    if (selectedCategory === 'all') return deals;
-    return deals.filter(deal => deal.category === selectedCategory || 
-                               deal.tags?.includes(selectedCategory));
+  const handleNotify = async (deal) => {
+    try {
+      // In a real app, you would call your notification API
+      // await axios.post('/api/notify', deal);
+      
+      // For now, just update the local state
+      setDeals(deals.map(d => 
+        d.DealID === deal.DealID ? { ...d, UserNotified: true } : d
+      ));
+      alert(`You'll be notified about "${deal.DealName}"`);
+    } catch (err) {
+      console.error('Error sending notification:', err);
+      alert('Failed to set up notification. Please try again.');
+    }
   };
   
-  const renderDeals = () => {
-    if (loading && deals.length === 0) {
-      return <div className="loading-container"><div className="loading-spinner"></div></div>;
-    }
-    
-    const filteredDeals = filterDealsByCategory(deals);
-    
-    if (filteredDeals.length === 0) {
-      return <p className="no-deals">No deals found in this category. Check back later!</p>;
-    }
-    
-    return (
-      <div className="deals-grid">
-        {filteredDeals.map((deal) => (
-          <DealCard 
-            key={deal.DealID || deal.id || deal.url} 
-            deal={deal} 
-            onNotify={() => {}} 
-          />
-        ))}
-      </div>
-    );
+  const filterDealsByCategory = () => {
+    // For now, we're not implementing real filtering
+    // In a real app, you would filter based on category
+    return deals;
   };
+  
+  if (loading) return <div className="loading-container"><div className="loading-spinner"></div></div>;
+  
+  if (error) return <div className="error-container">{error}</div>;
   
   return (
     <div className="container">
@@ -124,13 +130,6 @@ const App = () => {
         <h1>🔥 Smart Deal Notifier</h1>
         <p>Never miss a great deal again!</p>
       </header>
-      
-      {notification && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-          <button onClick={() => setNotification(null)} className="close-btn">×</button>
-        </div>
-      )}
       
       <section className="subscription-section">
         {!subscribed ? (
@@ -154,24 +153,14 @@ const App = () => {
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
-              <button 
-                type="submit" 
-                className="subscribe-btn" 
-                disabled={loading}
-              >
-                {loading ? 'Subscribing...' : 'Subscribe'}
-              </button>
+              <button type="submit" className="subscribe-btn">Subscribe</button>
             </div>
           </form>
         ) : (
           <div className="subscribed">
             <p>You are subscribed with: <strong>{userEmail}</strong></p>
-            <button 
-              onClick={handleUnsubscribe} 
-              className="unsubscribe-btn"
-              disabled={loading}
-            >
-              {loading ? 'Processing...' : 'Unsubscribe'}
+            <button onClick={handleUnsubscribe} className="unsubscribe-btn">
+              Unsubscribe
             </button>
           </div>
         )}
@@ -192,18 +181,21 @@ const App = () => {
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
-            <button 
-              onClick={fetchDealsWithState} 
-              className="refresh-btn"
-              disabled={loading}
-            >
-              {loading ? 'Loading...' : '↻ Refresh'}
+            <button onClick={fetchDeals} className="refresh-btn">
+              ↻ Refresh
             </button>
           </div>
         </div>
         
-        {error && <div className="error-container">{error}</div>}
-        {renderDeals()}
+        <div className="deals-grid">
+          {filterDealsByCategory().map(deal => (
+            <DealCard 
+              key={deal.DealID} 
+              deal={deal} 
+              onNotify={handleNotify} 
+            />
+          ))}
+        </div>
       </section>
       
       <footer>

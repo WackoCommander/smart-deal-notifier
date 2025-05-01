@@ -1,0 +1,7 @@
+{
+    "name": "deal-frontend",
+    "dependencies": {
+      "react": "^18.x",
+      "axios": "^1.x"
+    }
+  }

@@ -1,6 +1,5 @@
 #!/bin/bash
-# Minimal Deployment Script for Smart Deal Notifier
-# This script uses the simplest possible frontend implementation to avoid build issues
+# Simplified Deployment Script for Smart Deal Notifier
 
 # Exit on any error
 set -e
@@ -40,7 +39,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo "🚀 Starting Minimal Smart Deal Notifier deployment"
+echo "🚀 Starting Smart Deal Notifier deployment"
 echo "   Backend: $BACKEND_TYPE"
 echo "   Port: $PORT"
 echo "   AWS Region: $AWS_REGION"
@@ -69,92 +68,11 @@ VITE_API_URL=/api
 EOL
 echo "⚠️  Please edit .env with your AWS credentials and other settings"
 
-# Clean up frontend src and create minimal version
+# Install and build frontend
 cd "$PROJECT_ROOT/frontend"
 echo "📦 Installing frontend dependencies..."
 npm install
 
-# Create minimal App.jsx
-echo "Creating minimal App.jsx..."
-cat > "src/App.jsx" << 'EOL'
-import React, { useState } from 'react';
-import './App.css';
-
-// Simple inline deal card component to avoid import issues
-const SimpleDealCard = ({ deal }) => (
-  <div className="border p-4 m-2 bg-white">
-    <h3>{deal.title}</h3>
-    <p>Votes: {deal.votes} | {deal.notified ? "Notified" : "Not Notified"}</p>
-    <a href={deal.url} className="text-blue-600">View Deal</a>
-  </div>
-);
-
-const App = () => {
-  const [email, setEmail] = useState('');
-  
-  // Sample deals data
-  const deals = [
-    { id: 1, title: "MacBook Pro Deal", votes: 42, url: "#", notified: false },
-    { id: 2, title: "AirPods Pro Sale", votes: 28, url: "#", notified: true }
-  ];
-  
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    alert(`Subscribed with email: ${email}`);
-  };
-  
-  return (
-    <div className="container">
-      <header>
-        <h1>🔥 Smart Deal Notifier</h1>
-        <p>Never miss a great deal again!</p>
-      </header>
-      
-      <section className="subscription-section">
-        <form onSubmit={handleSubscribe}>
-          <h2>Get Deal Alerts</h2>
-          <div className="form-group">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <button type="submit" className="subscribe-btn">Subscribe</button>
-          </div>
-        </form>
-      </section>
-      
-      <section className="deals-section">
-        <h2>Latest Deals</h2>
-        {deals.map(deal => (
-          <SimpleDealCard key={deal.id} deal={deal} />
-        ))}
-      </section>
-      
-      <footer>
-        <p>© {new Date().getFullYear()} Smart Deal Notifier - Powered by AWS</p>
-      </footer>
-    </div>
-  );
-};
-
-export default App;
-EOL
-
-# Remove DealCard.js to avoid parsing issues
-if [ -f "src/DealCard.js" ]; then
-  echo "Removing DealCard.js..."
-  rm "src/DealCard.js"
-fi
-
-if [ -f "src/DealList.js" ]; then
-  echo "Removing DealList.js..."
-  rm "src/DealList.js"
-fi
-
-# Build the frontend
 echo "🔨 Building frontend..."
 NODE_ENV=production npm run build
 
@@ -209,11 +127,6 @@ elif [ "$BACKEND_TYPE" == "express" ]; then
   # Install dependencies
   echo "Installing backend dependencies..."
   npm install
-  
-  # Copy frontend build to server's public directory
-  echo "Copying frontend build to server..."
-  mkdir -p build
-  cp -r "$PROJECT_ROOT/frontend/dist/"* build/
   
   # Create PM2 ecosystem file
   echo "Creating PM2 ecosystem file..."
@@ -279,8 +192,7 @@ server {
 EOL
 
 echo "To install the Nginx configuration, run:"
-echo "sudo cp /tmp/smart-deal-notifier.conf /etc/nginx/sites-available/"
-echo "sudo ln -s /etc/nginx/sites-available/smart-deal-notifier.conf /etc/nginx/sites-enabled/"
+echo "sudo cp /tmp/smart-deal-notifier.conf /etc/nginx/conf.d/"
 echo "sudo nginx -t"
 echo "sudo systemctl reload nginx"
 

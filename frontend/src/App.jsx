@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { fetchDeals, subscribeToDeals, unsubscribeFromDeals } from './api';
+import DealCard from './DealCard';
 import './App.css';
 
 const App = () => {
@@ -8,8 +9,9 @@ const App = () => {
   const [error, setError] = useState(null);
   const [userEmail, setUserEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(['Electronics', 'Clothing', 'Home', 'Toys', 'Travel']);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [notification, setNotification] = useState(null);
   
   useEffect(() => {
     // Load user subscription status from local storage
@@ -20,35 +22,34 @@ const App = () => {
     }
     
     // Fetch deals from API
-    fetchDeals();
-    
-    // Extract unique categories from deals
-    fetchCategories();
+    fetchDeals().catch(error => {});
   }, []);
   
-  const fetchDeals = async () => {
+  // Handle API calls with proper loading and error states
+  const fetchDealsWithState = async () => {
     try {
       setLoading(true);
-      // Replace with your actual API endpoint
-      const response = await axios.get('/api/deals');
-      setDeals(response.data);
-      setLoading(false);
+      setError(null);
+      const data = await fetchDeals();
+      setDeals(data);
     } catch (err) {
       console.error('Error fetching deals:', err);
       setError('Failed to load deals. Please try again later.');
+    } finally {
       setLoading(false);
     }
   };
   
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get('/api/categories');
-      setCategories(response.data);
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-      // Use dummy categories as fallback
-      setCategories(['Electronics', 'Clothing', 'Home', 'Toys']);
-    }
+  // Fetch deals on initial load
+  useEffect(() => {
+    fetchDealsWithState();
+  }, []);
+  
+  // Show notifications temporarily then fade out
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => setNotification(null), 5000);
   };
   
   const handleSubscribe = async (e) => {
@@ -56,41 +57,48 @@ const App = () => {
     if (!userEmail) return;
     
     try {
-      // Connect to your AWS SNS subscription endpoint
-      await axios.post('/api/subscribe', { 
-        email: userEmail,
-        categories: selectedCategory === 'all' ? categories : [selectedCategory]
-      });
+      setLoading(true);
+      await subscribeToDeals(
+        userEmail, 
+        selectedCategory === 'all' ? [] : [selectedCategory]
+      );
       
       localStorage.setItem('userEmail', userEmail);
       setSubscribed(true);
-      alert('Successfully subscribed to deal notifications! Please check your email to confirm subscription.');
+      showNotification('Successfully subscribed to deal notifications! Please check your email to confirm subscription.');
     } catch (err) {
-      console.error('Error subscribing:', err);
-      alert('Failed to subscribe. Please try again.');
+      showNotification(err.message || 'Failed to subscribe. Please try again.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
   
   const handleUnsubscribe = async () => {
     try {
-      // Connect to your AWS SNS unsubscribe endpoint
-      await axios.post('/api/unsubscribe', { email: userEmail });
+      setLoading(true);
+      await unsubscribeFromDeals(userEmail);
       localStorage.removeItem('userEmail');
       setSubscribed(false);
       setUserEmail('');
-      alert('Successfully unsubscribed from notifications.');
+      showNotification('Successfully unsubscribed from notifications.');
     } catch (err) {
-      console.error('Error unsubscribing:', err);
-      alert('Failed to unsubscribe. Please try again.');
+      showNotification(err.message || 'Failed to unsubscribe. Please try again.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
   
   const filterDealsByCategory = (deals) => {
     if (selectedCategory === 'all') return deals;
-    return deals.filter(deal => deal.category === selectedCategory);
+    return deals.filter(deal => deal.category === selectedCategory || 
+                               deal.tags?.includes(selectedCategory));
   };
   
   const renderDeals = () => {
+    if (loading && deals.length === 0) {
+      return <div className="loading-container"><div className="loading-spinner"></div></div>;
+    }
+    
     const filteredDeals = filterDealsByCategory(deals);
     
     if (filteredDeals.length === 0) {
@@ -100,29 +108,15 @@ const App = () => {
     return (
       <div className="deals-grid">
         {filteredDeals.map((deal) => (
-          <div key={deal.id || deal.url} className="deal-card">
-            {deal.imageUrl && <div className="deal-image">
-              <img src={deal.imageUrl} alt={deal.title} />
-            </div>}
-            <div className="deal-content">
-              <h3>{deal.title}</h3>
-              <p className="price">${deal.price}</p>
-              <p className="description">{deal.description}</p>
-              <div className="deal-footer">
-                <span className="category-tag">{deal.category || 'Uncategorized'}</span>
-                <a href={deal.url} target="_blank" rel="noopener noreferrer" className="view-deal">
-                  View Deal
-                </a>
-              </div>
-            </div>
-          </div>
+          <DealCard 
+            key={deal.DealID || deal.id || deal.url} 
+            deal={deal} 
+            onNotify={() => {}} 
+          />
         ))}
       </div>
     );
   };
-  
-  if (loading) return <div className="loading-container"><div className="loading-spinner"></div></div>;
-  if (error) return <div className="error-container">{error}</div>;
   
   return (
     <div className="container">
@@ -130,6 +124,13 @@ const App = () => {
         <h1>🔥 Smart Deal Notifier</h1>
         <p>Never miss a great deal again!</p>
       </header>
+      
+      {notification && (
+        <div className={`notification ${notification.type}`}>
+          {notification.message}
+          <button onClick={() => setNotification(null)} className="close-btn">×</button>
+        </div>
+      )}
       
       <section className="subscription-section">
         {!subscribed ? (
@@ -153,14 +154,24 @@ const App = () => {
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
-              <button type="submit" className="subscribe-btn">Subscribe</button>
+              <button 
+                type="submit" 
+                className="subscribe-btn" 
+                disabled={loading}
+              >
+                {loading ? 'Subscribing...' : 'Subscribe'}
+              </button>
             </div>
           </form>
         ) : (
           <div className="subscribed">
             <p>You are subscribed with: <strong>{userEmail}</strong></p>
-            <button onClick={handleUnsubscribe} className="unsubscribe-btn">
-              Unsubscribe
+            <button 
+              onClick={handleUnsubscribe} 
+              className="unsubscribe-btn"
+              disabled={loading}
+            >
+              {loading ? 'Processing...' : 'Unsubscribe'}
             </button>
           </div>
         )}
@@ -181,12 +192,17 @@ const App = () => {
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
-            <button onClick={fetchDeals} className="refresh-btn">
-              ↻ Refresh
+            <button 
+              onClick={fetchDealsWithState} 
+              className="refresh-btn"
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : '↻ Refresh'}
             </button>
           </div>
         </div>
         
+        {error && <div className="error-container">{error}</div>}
         {renderDeals()}
       </section>
       

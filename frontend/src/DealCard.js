@@ -1,26 +1,63 @@
 import React from 'react';
+import { notifyDeal } from './api';
 
-function DealCard({ deal, onNotify }) {
+// This component works with both the backend model formats
+const DealCard = ({ deal, onNotify }) => {
+  // Handle different property formats from different APIs
+  const title = deal.DealName || deal.title;
+  const url = deal.DealURL || deal.url || deal.link;
+  const votesUp = deal.VoteUp || deal.votes_plus || 0;
+  const votesDown = deal.VoteDown || deal.votes_minus || 0;
+  const isNotified = deal.UserNotified || false;
+  const price = deal.price || '';
+  const description = deal.description || '';
+  const imageUrl = deal.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
+  const category = deal.category || 'Uncategorized';
+
+  const handleNotify = async () => {
+    if (isNotified) return;
+    
+    try {
+      await notifyDeal(deal);
+      if (onNotify) onNotify(deal);
+    } catch (err) {
+      console.error('Error sending notification:', err);
+    }
+  };
+
   return (
-    <div className="border rounded p-4 bg-white flex flex-col justify-between shadow">
-      <div>
-        <h2 className="font-bold text-lg">{deal.DealName}</h2>
-        <a href={deal.DealURL} className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">View Deal</a>
-        <div className="mt-2 flex gap-4">
-          <span>👍 {deal.VoteUp}</span>
-          <span>👎 {deal.VoteDown}</span>
-        </div>
-        <div className="mt-2 text-xs text-gray-500">
-          Notified: {deal.UserNotified ? "Yes" : "No"} | Relevant: {deal.UserRelevant ? "Yes" : "No"}
+    <div className="deal-card">
+      <div className="deal-image">
+        <img src={imageUrl} alt={title} />
+      </div>
+      <div className="deal-content">
+        <h3>{title}</h3>
+        {price && <p className="price">${price}</p>}
+        <p className="description">{description || title}</p>
+        <div className="deal-footer">
+          <div className="vote-info">
+            <span className="upvotes">👍 {votesUp}</span>
+            <span className="downvotes">👎 {votesDown}</span>
+          </div>
+          <span className="category-tag">{category}</span>
+          <div className="action-buttons">
+            <a href={url} target="_blank" rel="noopener noreferrer" className="view-deal">
+              View Deal
+            </a>
+            {!isNotified && (
+              <button 
+                onClick={handleNotify} 
+                className="notify-btn"
+                disabled={isNotified}
+              >
+                Notify
+              </button>
+            )}
+          </div>
         </div>
       </div>
-      <button disabled={deal.UserNotified}
-        className={`mt-3 px-3 py-1 rounded ${deal.UserNotified ? "bg-gray-300" : "bg-green-600 text-white"}`}
-        onClick={() => onNotify(deal)}>
-        {deal.UserNotified ? "Already Notified" : "Notify Me"}
-      </button>
     </div>
   );
-}
+};
 
 export default DealCard;

@@ -5,16 +5,14 @@ import boto3
 from boto3.dynamodb.types import TypeDeserializer
 import os
 import logging
-from typing import List, Optional
-from botocore.exceptions import ClientError
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment
+# Load environment with correct region
 DYNAMO_TABLE = os.getenv('DYNAMO_TABLE', 'deals')
-REGION = os.getenv('AWS_REGION', 'ap-southeast-2')
+REGION = os.getenv('AWS_REGION', 'us-west-2')  # Default to us-west-2 where your table exists
 
 app = FastAPI(title="Smart Deal Notifier API")
 
@@ -43,11 +41,16 @@ def convert_item(raw_item):
         logger.error(f"Error deserializing DynamoDB item: {str(e)}")
         raise
 
-@app.get("/deals", response_model=List[Deal])
+@app.get("/")
+async def root():
+    """Health check endpoint"""
+    return {"status": "online", "service": "Smart Deal Notifier API"}
+
+@app.get("/deals", response_model=list[Deal])
 async def get_deals(
-    min_voteup: Optional[int] = Query(None, description="Minimum number of upvotes"),
-    user_notified: Optional[bool] = Query(None, description="Filter by notification status"),
-    relevance_assessed: Optional[bool] = Query(None, description="Filter by relevance assessment status"),
+    min_voteup: int = Query(None, description="Minimum number of upvotes"),
+    user_notified: bool = Query(None, description="Filter by notification status"),
+    relevance_assessed: bool = Query(None, description="Filter by relevance assessment status"),
 ):
     """
     Retrieve deals from DynamoDB with optional filtering.
@@ -91,16 +94,10 @@ async def get_deals(
                 logger.error(f"Failed to process deal item: {str(e)}")
         
         return deals
-    except ClientError as e:
-        error_code = e.response['Error']['Code']
-        error_message = e.response['Error']['Message']
-        logger.error(f"DynamoDB error: {error_code} - {error_message}")
-        raise HTTPException(status_code=500, detail=f"Database error: {error_code}")
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Error in get_deals: {str(e)}")
+        if hasattr(e, 'response') and 'Error' in e.response:
+            error_code = e.response['Error'].get('Code', 'Unknown')
+            error_message = e.response['Error'].get('Message', str(e))
+            raise HTTPException(status_code=500, detail=f"Database error: {error_code}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-@app.get("/")
-async def root():
-    """Health check endpoint"""
-    return {"status": "online", "service": "Smart Deal Notifier API"}

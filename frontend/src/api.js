@@ -9,6 +9,15 @@ const api = axios.create({
   timeout: 10000,
 });
 
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`);
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Handle API errors consistently
 const handleApiError = (error) => {
   console.error('API Error:', error);
@@ -48,33 +57,6 @@ export const fetchDeals = async (filters = {}) => {
     const query = params.toString();
     const url = `/deals${query ? '?' + query : ''}`;
     const response = await api.get(url);
-    return response.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const notifyDeal = async (deal) => {
-  try {
-    const response = await api.post('/notify', deal);
-    return response.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const subscribeToDeals = async (email, categories = []) => {
-  try {
-    const response = await api.post('/subscribe', { email, categories });
-    return response.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
-};
-
-export const unsubscribeFromDeals = async (email) => {
-  try {
-    const response = await api.post('/unsubscribe', { email });
     return response.data;
   } catch (error) {
     throw handleApiError(error);
